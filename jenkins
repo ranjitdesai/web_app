@@ -1,0 +1,30 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'git@github.com:ranjitdesai/web_app.git'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker login -u "ranjitdesai" -p "ranjit9766"'
+               # sh 'docker build -t ranjitdesai/mywebapp:v1 .'
+               # sh 'docker push ranjitdesai/mywebapp:v1'
+                 docker pull ranjitdesai/mywebapp:v1
+            }
+        }
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['ec2-key']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ec2-user@your-actual-ec2-ip "
+                        docker pull ranjitdesai/mywebapp:v1 &&
+                        docker run -d -p 80:80 ranjitdesai/mywebapp:v1"
+                    '''
+                }
+            }
+        }
+    }
+}
+
